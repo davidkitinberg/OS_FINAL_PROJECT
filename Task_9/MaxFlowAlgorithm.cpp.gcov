@@ -1,0 +1,228 @@
+        -:    0:Source:MaxFlowAlgorithm.cpp
+        -:    1:#include "MaxFlowAlgorithm.h"
+        -:    2:#include "Graph.h"
+        -:    3:
+        -:    4:#include <vector>
+        -:    5:#include <queue>
+        -:    6:#include <limits>
+        -:    7:#include <sstream>
+        -:    8:
+function _ZL19edmondsKarp_unitCapRK5Graphii called 4 returned 100% blocks executed 71%
+        4:    9:static int edmondsKarp_unitCap(const Graph& G, int s, int t) {
+        4:   10:    const int n = G.V();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+       4*:   11:    if (n == 0 || s < 0 || t < 0 || s >= n || t >= n) return 0;
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+branch  2 taken 4 (fallthrough)
+branch  3 taken 0
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0
+branch  6 taken 4 (fallthrough)
+branch  7 taken 0
+branch  8 taken 0 (fallthrough)
+branch  9 taken 4
+       4*:   12:    if (s == t) return 0;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+        -:   13:
+        -:   14:    // Build capacity matrix from Graph adjacency: each edge contributes capacity 1
+        4:   15:    const std::vector<int>* adj = G.raw();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   16:    std::vector<std::vector<int>> cap(n, std::vector<int>(n, 0));
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+call    7 returned 4
+call    8 returned 4
+call    9 never executed
+       24:   17:    for (int u = 0; u < n; ++u) {
+branch  0 taken 20
+branch  1 taken 4 (fallthrough)
+       76:   18:        for (int v : adj[u]) {
+call    0 returned 20
+call    1 returned 20
+call    2 returned 56
+call    3 returned 76
+branch  4 taken 56
+branch  5 taken 20 (fallthrough)
+        -:   19:            // parallel edges sum capacities
+       56:   20:            ++cap[u][v];
+call    0 returned 56
+call    1 returned 56
+call    2 returned 56
+        -:   21:        }
+        -:   22:    }
+        -:   23:
+        4:   24:    int maxflow = 0;
+        4:   25:    std::vector<int> parent(n, -1);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+        -:   26:
+function _ZZL19edmondsKarp_unitCapRK5GraphiiENKUliiE_clEii called 12 returned 100% blocks executed 82%
+       12:   27:    auto bfs = [&](int source, int sink) -> int {
+       12:   28:        std::fill(parent.begin(), parent.end(), -1);
+call    0 returned 12
+call    1 returned 12
+call    2 returned 12
+branch  3 taken 12 (fallthrough)
+branch  4 taken 0 (throw)
+       12:   29:        parent[source] = -2;  // sentinel
+call    0 returned 12
+       12:   30:        std::queue<std::pair<int,int>> q; // (vertex, bottleneck so far)
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+       12:   31:        q.push({source, std::numeric_limits<int>::max()});
+call    0 returned 12
+call    1 returned 12
+call    2 returned 12
+branch  3 taken 12 (fallthrough)
+branch  4 taken 0 (throw)
+        -:   32:
+       30:   33:        while (!q.empty()) {
+call    0 returned 30
+branch  1 taken 26
+branch  2 taken 4 (fallthrough)
+       26:   34:            int u = q.front().first;
+call    0 returned 26
+       26:   35:            int flow_so_far = q.front().second;
+call    0 returned 26
+       26:   36:            q.pop();
+call    0 returned 26
+        -:   37:
+      148:   38:            for (int v = 0; v < n; ++v) {
+branch  0 taken 130
+branch  1 taken 18 (fallthrough)
+      130:   39:                if (parent[v] == -1 && cap[u][v] > 0) {
+call    0 returned 130
+branch  1 taken 74 (fallthrough)
+branch  2 taken 56
+call    3 returned 74
+call    4 returned 74
+branch  5 taken 36 (fallthrough)
+branch  6 taken 38
+branch  7 taken 36 (fallthrough)
+branch  8 taken 94
+       36:   40:                    parent[v] = u;
+call    0 returned 36
+       36:   41:                    int new_flow = std::min(flow_so_far, cap[u][v]);
+call    0 returned 36
+call    1 returned 36
+call    2 returned 36
+       36:   42:                    if (v == sink) return new_flow;
+branch  0 taken 8 (fallthrough)
+branch  1 taken 28
+       28:   43:                    q.push({v, new_flow});
+call    0 returned 28
+call    1 returned 28
+branch  2 taken 28 (fallthrough)
+branch  3 taken 0 (throw)
+        -:   44:                }
+        -:   45:            }
+        -:   46:        }
+        4:   47:        return 0; // no augmenting path
+       16:   48:    };
+call    0 returned 12
+call    1 never executed
+        -:   49:
+        -:   50:    while (true) {
+       12:   51:        int aug = bfs(s, t);
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+       12:   52:        if (aug == 0) break; // no more augmenting paths
+branch  0 taken 4 (fallthrough)
+branch  1 taken 8
+        -:   53:
+        8:   54:        maxflow += aug;
+        -:   55:        // backtrack and update residual capacities
+        8:   56:        int v = t;
+       20:   57:        while (v != s) {
+branch  0 taken 12
+branch  1 taken 8 (fallthrough)
+       12:   58:            int u = parent[v];
+call    0 returned 12
+       12:   59:            cap[u][v] -= aug;
+call    0 returned 12
+call    1 returned 12
+       12:   60:            cap[v][u] += aug;
+call    0 returned 12
+call    1 returned 12
+       12:   61:            v = u;
+        -:   62:        }
+        8:   63:    }
+        -:   64:
+        4:   65:    return maxflow;
+        4:   66:}
+call    0 returned 4
+call    1 returned 4
+call    2 never executed
+call    3 never executed
+        -:   67:
+function _ZN16MaxFlowAlgorithm3runB5cxx11ERK5Graph called 4 returned 100% blocks executed 68%
+        4:   68:std::string MaxFlowAlgorithm::run(const Graph& g) {
+        4:   69:    std::ostringstream out;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   70:    const int n = g.V();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   71:    if (n <= 1) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    #####:   72:        out << "Max flow (0->" << n-1 << ", unit capacities): 0\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+    #####:   73:        return out.str();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   74:    }
+        -:   75:
+        4:   76:    int flow = edmondsKarp_unitCap(g, 0, n-1); // (graph,source,sink)
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   77:    out << "Max flow (0->" << (n-1) << ", unit capacities): " << flow << "\n";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 4
+branch 13 taken 4 (fallthrough)
+branch 14 taken 0 (throw)
+        4:   78:    return out.str();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   79:}
+call    0 returned 4
+call    1 never executed

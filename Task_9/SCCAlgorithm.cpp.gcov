@@ -1,0 +1,236 @@
+        -:    0:Source:SCCAlgorithm.cpp
+        -:    1:#include "SCCAlgorithm.h"
+        -:    2:#include "Graph.h"
+        -:    3:#include <vector>
+        -:    4:#include <stack>
+        -:    5:#include <sstream>
+        -:    6:
+        -:    7:// DFS to fill finish order (on original graph)
+function _ZL8dfsOrderiPKSt6vectorIiSaIiEERS_IcSaIcEERS1_ called 20 returned 100% blocks executed 100%
+       20:    8:static void dfsOrder(int u, const std::vector<int>* adj, std::vector<char>& seen, std::vector<int>& order) {
+       20:    9:    seen[u] = 1;
+call    0 returned 20
+       76:   10:    for (int v : adj[u]) {
+call    0 returned 20
+call    1 returned 20
+call    2 returned 56
+call    3 returned 56
+call    4 returned 76
+branch  5 taken 56
+branch  6 taken 20 (fallthrough)
+       56:   11:        if (!seen[v]) dfsOrder(v, adj, seen, order);
+call    0 returned 56
+branch  1 taken 16 (fallthrough)
+branch  2 taken 40
+call    3 returned 16
+branch  4 taken 16 (fallthrough)
+branch  5 taken 0 (throw)
+        -:   12:    }
+       20:   13:    order.push_back(u); // finished u
+call    0 returned 20
+       20:   14:}
+        -:   15:
+        -:   16:// DFS on the reversed graph, collect one component
+function _ZL10dfsCollectiRKSt6vectorIS_IiSaIiEESaIS1_EERS_IcSaIcEERS1_ called 20 returned 100% blocks executed 100%
+       20:   17:static void dfsCollect(int u, const std::vector<std::vector<int>>& radj, std::vector<char>& seen, std::vector<int>& comp) {
+       20:   18:    seen[u] = 1;
+call    0 returned 20
+       20:   19:    comp.push_back(u);
+call    0 returned 20
+       76:   20:    for (int v : radj[u]) {
+call    0 returned 20
+call    1 returned 20
+call    2 returned 20
+call    3 returned 56
+call    4 returned 56
+call    5 returned 76
+branch  6 taken 56
+branch  7 taken 20 (fallthrough)
+       56:   21:        if (!seen[v]) dfsCollect(v, radj, seen, comp);
+call    0 returned 56
+branch  1 taken 16 (fallthrough)
+branch  2 taken 40
+call    3 returned 16
+branch  4 taken 16 (fallthrough)
+branch  5 taken 0 (throw)
+        -:   22:    }
+       20:   23:}
+        -:   24:
+function _ZN12SCCAlgorithm3runB5cxx11ERK5Graph called 4 returned 100% blocks executed 76%
+        4:   25:std::string SCCAlgorithm::run(const Graph& g) {
+        4:   26:    const int n = g.V();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   27:    const std::vector<int>* adj = g.raw();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   28:
+        4:   29:    std::ostringstream out;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   30:    if (n == 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    #####:   31:        out << "SCC count: 0 (empty graph)";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   32:        return out.str();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   33:    }
+        -:   34:
+        -:   35:    // First DFS pass: get vertices in decreasing finish time
+        4:   36:    std::vector<char> seen(n, 0);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+        4:   37:    std::vector<int> order;
+call    0 returned 4
+        4:   38:    order.reserve(n);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   39:
+       24:   40:    for (int u = 0; u < n; ++u) {
+branch  0 taken 20
+branch  1 taken 4 (fallthrough)
+       20:   41:        if (!seen[u]) dfsOrder(u, adj, seen, order);
+call    0 returned 20
+branch  1 taken 4 (fallthrough)
+branch  2 taken 16
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+        -:   42:    }
+        -:   43:
+        -:   44:    // Build reversed graph
+        4:   45:    std::vector<std::vector<int>> radj(n);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+       24:   46:    for (int u = 0; u < n; ++u) {
+branch  0 taken 20
+branch  1 taken 4 (fallthrough)
+       76:   47:        for (int v : adj[u]) {
+call    0 returned 20
+call    1 returned 20
+call    2 returned 56
+call    3 returned 56
+call    4 returned 76
+branch  5 taken 56
+branch  6 taken 20 (fallthrough)
+        -:   48:            // reverse edge v -> u
+       56:   49:            radj[v].push_back(u);
+call    0 returned 56
+call    1 returned 56
+branch  2 taken 56 (fallthrough)
+branch  3 taken 0 (throw)
+        -:   50:        }
+        -:   51:    }
+        -:   52:
+        -:   53:    // Second pass: process in reverse finish order on reversed graph
+        4:   54:    std::fill(seen.begin(), seen.end(), 0);
+call    0 returned 4
+call    1 returned 4
+call    2 returned 4
+branch  3 taken 4 (fallthrough)
+branch  4 taken 0 (throw)
+        4:   55:    std::vector<std::vector<int>> components;
+call    0 returned 4
+        -:   56:
+       24:   57:    for (int i = n - 1; i >= 0; --i) {
+branch  0 taken 20
+branch  1 taken 4 (fallthrough)
+       20:   58:        int u = order[i];
+call    0 returned 20
+       20:   59:        if (!seen[u]) {
+call    0 returned 20
+branch  1 taken 4 (fallthrough)
+branch  2 taken 16
+        4:   60:            std::vector<int> comp;
+call    0 returned 4
+        4:   61:            dfsCollect(u, radj, seen, comp);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   62:            components.push_back(std::move(comp));
+call    0 returned 4
+call    1 returned 4
+branch  2 taken 4 (fallthrough)
+branch  3 taken 0 (throw)
+        4:   63:        }
+call    0 returned 4
+call    1 never executed
+        -:   64:    }
+        -:   65:
+        -:   66:    // Format output
+        4:   67:    out << "SCC count: " << components.size() << "\n";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+call    4 returned 4
+branch  5 taken 4 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 4
+branch  8 taken 4 (fallthrough)
+branch  9 taken 0 (throw)
+        8:   68:    for (size_t i = 0; i < components.size(); ++i) {
+call    0 returned 8
+branch  1 taken 4
+branch  2 taken 4 (fallthrough)
+        4:   69:        out << "SCC " << i << ": ";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+       24:   70:        for (size_t j = 0; j < components[i].size(); ++j) {
+call    0 returned 24
+call    1 returned 24
+branch  2 taken 20
+branch  3 taken 4 (fallthrough)
+       20:   71:            out << components[i][j] << (j + 1 == components[i].size() ? "" : " ");
+call    0 returned 20
+call    1 returned 20
+call    2 returned 20
+branch  3 taken 20 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 20
+call    6 returned 20
+branch  7 taken 4 (fallthrough)
+branch  8 taken 16
+call    9 returned 20
+branch 10 taken 20 (fallthrough)
+branch 11 taken 0 (throw)
+        -:   72:        }
+        4:   73:        out << "\n";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   74:    }
+        4:   75:    return out.str();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   76:}
+call    0 returned 4
+call    1 returned 4
+call    2 returned 4
+call    3 returned 4
+call    4 returned 4
+call    5 never executed
+call    6 never executed
+call    7 never executed
+call    8 never executed
+call    9 never executed

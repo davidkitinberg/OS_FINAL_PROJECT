@@ -73,7 +73,7 @@ std::string MaxFlowAlgorithm::run(const Graph& g) {
         return out.str();
     }
 
-    int flow = edmondsKarp_unitCap(g, /*source=*/0, /*sink=*/n-1);
+    int flow = edmondsKarp_unitCap(g, 0, n-1); // (graph,source,sink)
     out << "Max flow (0->" << (n-1) << ", unit capacities): " << flow << "\n";
     return out.str();
 }

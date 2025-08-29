@@ -1,0 +1,148 @@
+        -:    0:Source:MSTAlgorithm.cpp
+        -:    1:#include "MSTAlgorithm.h"
+        -:    2:#include <vector>
+        -:    3:#include <stack>
+        -:    4:#include <sstream>
+        -:    5:
+        -:    6:/**
+        -:    7: * DFS over the whole graph to test connectivity.
+        -:    8: * We consider all vertices; if any vertex is unreachable, the graph is disconnected.
+        -:    9: */
+function _ZL22isConnectedAllVerticesRK5Graph called 4 returned 100% blocks executed 76%
+        4:   10:static bool isConnectedAllVertices(const Graph& g) {
+        4:   11:    const int n = g.V();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+       4*:   12:    if (n == 0) return true; // vacuously connected
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+       4*:   13:    if (n == 1) return true; // single vertex
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+        -:   14:
+        4:   15:    const std::vector<int>* adj = g.raw();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   16:    std::vector<char> seen(n, 0);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+        -:   17:
+        -:   18:    // Find a start vertex that exists (0..n-1). For unweighted adjacency, 0 is fine.
+        4:   19:    int start = 0;
+        4:   20:    std::stack<int> st;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   21:    st.push(start);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   22:    seen[start] = 1;
+call    0 returned 4
+        -:   23:
+       24:   24:    while (!st.empty()) {
+call    0 returned 24
+branch  1 taken 20
+branch  2 taken 4 (fallthrough)
+       20:   25:        int u = st.top(); st.pop();
+call    0 returned 20
+call    1 returned 20
+       76:   26:        for (int v : adj[u]) {
+call    0 returned 20
+call    1 returned 20
+call    2 returned 56
+call    3 returned 56
+call    4 returned 76
+branch  5 taken 56
+branch  6 taken 20 (fallthrough)
+       56:   27:            if (!seen[v]) {
+call    0 returned 56
+branch  1 taken 16 (fallthrough)
+branch  2 taken 40
+       16:   28:                seen[v] = 1;
+call    0 returned 16
+       16:   29:                st.push(v);
+call    0 returned 16
+branch  1 taken 16 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   30:            }
+        -:   31:        }
+        -:   32:    }
+        -:   33:
+        -:   34:    // If any vertex is unseen, the graph is disconnected
+       24:   35:    for (int i = 0; i < n; ++i) {
+branch  0 taken 20
+branch  1 taken 4 (fallthrough)
+      20*:   36:        if (!seen[i]) return false;
+call    0 returned 20
+branch  1 taken 0 (fallthrough)
+branch  2 taken 20
+        -:   37:    }
+        4:   38:    return true;
+        4:   39:}
+call    0 returned 4
+call    1 returned 4
+call    2 never executed
+call    3 never executed
+        -:   40:
+function _ZN12MSTAlgorithm3runB5cxx11ERK5Graph called 4 returned 100% blocks executed 64%
+        4:   41:std::string MSTAlgorithm::run(const Graph& g) {
+        4:   42:    const int n = g.V();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   43:    std::ostringstream out;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   44:
+        4:   45:    if (n == 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    #####:   46:        out << "MST weight (unit): 0  (empty graph)\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   47:        return out.str();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   48:    }
+        4:   49:    if (!isConnectedAllVertices(g)) {
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 4
+    #####:   50:        out << "MST does not exist: graph is disconnected (spanning tree requires one connected component).\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   51:        return out.str();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   52:    }
+        -:   53:
+        -:   54:    // Unweighted MST (unit edges): weight equals number of edges in any spanning tree = V - 1
+        4:   55:    out << "MST weight (unit): " << (n - 1) << "\n";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+        4:   56:    return out.str();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:   57:}
+call    0 returned 4
+call    1 never executed

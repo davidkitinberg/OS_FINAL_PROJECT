@@ -1,0 +1,89 @@
+File '/usr/include/c++/13/bits/stl_algobase.h'
+Lines executed:61.76% of 34
+Creating 'stl_algobase.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_uninitialized.h'
+Lines executed:76.47% of 34
+Creating 'stl_uninitialized.h.gcov'
+
+File '/usr/include/c++/13/bits/new_allocator.h'
+Lines executed:53.45% of 58
+Creating 'new_allocator.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_vector.h'
+Lines executed:61.57% of 255
+Creating 'stl_vector.h.gcov'
+
+File '/usr/include/c++/13/bits/alloc_traits.h'
+Lines executed:100.00% of 7
+Creating 'alloc_traits.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_construct.h'
+Lines executed:60.87% of 46
+Creating 'stl_construct.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_bvector.h'
+Lines executed:94.51% of 91
+Creating 'stl_bvector.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_iterator.h'
+Lines executed:69.64% of 56
+Creating 'stl_iterator.h.gcov'
+
+File '/usr/include/c++/13/bits/move.h'
+Lines executed:62.50% of 16
+Creating 'move.h.gcov'
+
+File '/usr/include/c++/13/bits/allocator.h'
+Lines executed:100.00% of 4
+Creating 'allocator.h.gcov'
+
+File '/usr/include/c++/13/bits/vector.tcc'
+Lines executed:66.67% of 63
+Creating 'vector.tcc.gcov'
+
+File 'EulerChecker.cpp'
+Lines executed:91.89% of 37
+Creating 'EulerChecker.cpp.gcov'
+
+File '/usr/include/c++/13/new'
+Lines executed:66.67% of 6
+Creating 'new.gcov'
+
+File '/usr/include/c++/13/bits/basic_string.tcc'
+Lines executed:100.00% of 12
+Creating 'basic_string.tcc.gcov'
+
+File '/usr/include/c++/13/bits/stl_iterator_base_types.h'
+Lines executed:100.00% of 1
+Creating 'stl_iterator_base_types.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_iterator_base_funcs.h'
+Lines executed:100.00% of 3
+Creating 'stl_iterator_base_funcs.h.gcov'
+
+File '/usr/include/c++/13/bits/basic_string.h'
+Lines executed:81.82% of 11
+Creating 'basic_string.h.gcov'
+
+File '/usr/include/c++/13/bits/char_traits.h'
+Lines executed:28.00% of 25
+Creating 'char_traits.h.gcov'
+
+File 'EulerServer.cpp'
+Lines executed:70.11% of 87
+Creating 'EulerServer.cpp.gcov'
+
+File 'Graph.h'
+No executable lines
+Removing 'Graph.h.gcov'
+
+File '/usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h'
+Lines executed:100.00% of 2
+Creating 'c++config.h.gcov'
+
+File 'Graph.cpp'
+Lines executed:50.00% of 34
+Creating 'Graph.cpp.gcov'
+
+Lines executed:68.14% of 882

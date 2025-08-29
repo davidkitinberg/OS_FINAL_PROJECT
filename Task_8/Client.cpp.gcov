@@ -1,0 +1,437 @@
+        -:    0:Source:Client.cpp
+        -:    0:Graph:client-Client.gcno
+        -:    0:Data:client-Client.gcda
+        -:    0:Runs:2
+        -:    1:#include <iostream>
+        -:    2:#include <sstream>
+        -:    3:#include <string>
+        -:    4:#include <vector>
+        -:    5:#include <set>
+        -:    6:#include <random>
+        -:    7:#include <cstring>
+        -:    8:#include <unistd.h>
+        -:    9:#include <netinet/in.h>
+        -:   10:#include <arpa/inet.h>
+        -:   11:#include <getopt.h>
+        -:   12:#include <cstdint>
+        -:   13:
+        -:   14:constexpr int  PORT = 12345;
+        -:   15:constexpr char SERVER_IP[] = "127.0.0.1";
+        -:   16:
+        -:   17:// Helper
+function _ZL8writeAlliPKvm called 148 returned 100% blocks executed 88%
+      148:   18:static bool writeAll(int fd, const void* buf, std::size_t n)
+        -:   19:{
+      148:   20:    const std::uint8_t* p = static_cast<const std::uint8_t*>(buf);
+      296:   21:    while (n) {
+branch  0 taken 148
+branch  1 taken 148 (fallthrough)
+      148:   22:        ssize_t w = write(fd, p, n);
+call    0 returned 148
+     148*:   23:        if (w <= 0) return false;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 148
+      148:   24:        p += w;  n -= static_cast<std::size_t>(w);
+        -:   25:    }
+      148:   26:    return true;
+        -:   27:}
+function _ZL7readAlliPvm called 24 returned 100% blocks executed 88%
+       24:   28:static bool readAll(int fd, void* buf, std::size_t n)
+        -:   29:{
+       24:   30:    std::uint8_t* p = static_cast<std::uint8_t*>(buf);
+       48:   31:    while (n) {
+branch  0 taken 24
+branch  1 taken 24 (fallthrough)
+       24:   32:        ssize_t r = read(fd, p, n);
+call    0 returned 24
+      24*:   33:        if (r <= 0) return false;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 24
+       24:   34:        p += r;  n -= static_cast<std::size_t>(r);
+        -:   35:    }
+       24:   36:    return true;
+        -:   37:}
+        -:   38:
+        -:   39:// Generates a simple random directed graph with V vertices and E edges
+        -:   40:// Ensures no self-loops and no duplicate edges
+        -:   41:static std::vector<std::pair<int,int>>
+function _ZL10buildEdgesiij called 9 returned 100% blocks executed 81%
+        9:   42:buildEdges(int V, int E, unsigned seed)
+        -:   43:{
+        9:   44:    std::mt19937 rng(seed);
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+        9:   45:    std::uniform_int_distribution<int> dist(0, V-1);
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+        9:   46:    std::set<std::pair<int,int>> s;
+call    0 returned 9
+      113:   47:    while ((int)s.size() < E) {
+call    0 returned 113
+branch  1 taken 104
+branch  2 taken 9 (fallthrough)
+      104:   48:        int u = dist(rng), v = dist(rng);
+call    0 returned 104
+branch  1 taken 104 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 104
+branch  4 taken 104 (fallthrough)
+branch  5 taken 0 (throw)
+      160:   49:        if (u == v) continue; // no self-loops
+branch  0 taken 39 (fallthrough)
+branch  1 taken 65
+       65:   50:        if (s.emplace(u,v).second) continue; // duplicate-safe insert
+call    0 returned 65
+branch  1 taken 65 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 56 (fallthrough)
+branch  4 taken 9
+        -:   51:    }
+       27:   52:    return {s.begin(), s.end()};
+call    0 returned 9
+call    1 returned 9
+call    2 returned 9
+branch  3 taken 9 (fallthrough)
+branch  4 taken 0 (throw)
+        9:   53:}
+call    0 returned 9
+call    1 never executed
+        -:   54:
+        -:   55:// Usage function
+function _ZL5usagePKc called 0 returned 0% blocks executed 0%
+    #####:   56:static void usage(const char* p) {
+    #####:   57:    std::cerr << "Usage: " << p << " -v <vertices> -e <edges> [-s seed]\n";
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:   58:}
+        -:   59:
+        -:   60:// Sends a request to the server for a given algorithm and graph, and prints the result
+function _ZL9doRequestiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiiRKSt6vectorISt4pairIiiESaIS9_EE called 9 returned 100% blocks executed 62%
+        9:   61:static void doRequest(int sock,
+        -:   62:                      const std::string& algo,
+        -:   63:                      int V, int E,
+        -:   64:                      const std::vector<std::pair<int,int>>& edges)
+        -:   65:{
+        -:   66:    // Send number of vertices and edges (as network-order integers)
+        9:   67:    std::int32_t v_net  = htonl(V);
+        9:   68:    std::int32_t e_net  = htonl(E);
+      18*:   69:    if (!writeAll(sock, &v_net, 4) ||
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 9 (fallthrough)
+branch  4 taken 0
+branch  5 taken 0 (fallthrough)
+branch  6 taken 9
+       9*:   70:        !writeAll(sock, &e_net, 4)) { throw std::runtime_error("send"); }
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 9
+call    5 never executed
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+call   10 never executed
+        -:   71:
+        -:   72:    // Send edge list
+       65:   73:    for (auto [u,v] : edges) {
+call    0 returned 9
+call    1 returned 9
+call    2 returned 56
+call    3 returned 56
+call    4 returned 56
+call    5 returned 56
+call    6 returned 65
+branch  7 taken 56
+branch  8 taken 9 (fallthrough)
+       56:   74:        std::int32_t u_net = htonl(u), v_net = htonl(v);
+     112*:   75:        if (!writeAll(sock, &u_net, 4) ||
+call    0 returned 56
+branch  1 taken 56 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 56 (fallthrough)
+branch  4 taken 0
+branch  5 taken 0 (fallthrough)
+branch  6 taken 56
+      56*:   76:            !writeAll(sock, &v_net, 4)) throw std::runtime_error("send");
+call    0 returned 56
+branch  1 taken 56 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 56
+call    5 never executed
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+call   10 never executed
+        -:   77:    }
+        -:   78:
+        -:   79:    // Send algorithm name as a string: first its length, then the raw characters
+        9:   80:    std::int32_t len = htonl(static_cast<std::int32_t>(algo.size()));
+call    0 returned 9
+      18*:   81:    if (!writeAll(sock, &len, 4) ||
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 9 (fallthrough)
+branch  4 taken 0
+branch  5 taken 0 (fallthrough)
+branch  6 taken 9
+       9*:   82:        !writeAll(sock, algo.data(), algo.size())) throw std::runtime_error("send");
+call    0 returned 9
+call    1 returned 9
+call    2 returned 9
+branch  3 taken 9 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 taken 0 (fallthrough)
+branch  6 taken 9
+call    7 never executed
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+call   11 never executed
+call   12 never executed
+        -:   83:
+        -:   84:    
+        -:   85:    // Read a response from the server: [size][data] format
+function _ZZL9doRequestiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiiRKSt6vectorISt4pairIiiESaIS9_EEENKUlvE_clEv called 12 returned 100% blocks executed 67%
+       12:   86:    auto readOne = [&]{
+      12*:   87:        std::int32_t n_net; if (!readAll(sock, &n_net, 4)) return std::string{};
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 12
+call    5 never executed
+       24:   88:        int n = ntohl(n_net);
+       12:   89:        std::string s(n, '\0');
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+      12*:   90:        if (!readAll(sock, s.data(), n)) return std::string{};
+call    0 returned 12
+call    1 returned 12
+branch  2 taken 12 (fallthrough)
+branch  3 taken 0 (throw)
+branch  4 taken 0 (fallthrough)
+branch  5 taken 12
+call    6 never executed
+       12:   91:        return s;
+call    0 returned 12
+       12:   92:    };
+call    0 returned 12
+call    1 never executed
+        -:   93:
+        -:   94:    // If running all algorithms, expect 4 results (one per algorithm)
+        9:   95:    if (algo == "all") 
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 1 (fallthrough)
+branch  4 taken 8
+        -:   96:    {
+        9:   97:        for (std::string name : {"mst","scc","maxflow","hamilton"})
+call    0 returned 1
+call    1 returned 1
+call    2 returned 4
+branch  3 taken 4 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 taken 4
+branch  6 taken 1 (fallthrough)
+        -:   98:        {
+        4:   99:            std::cout << name << " → " << readOne();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 4
+call   13 never executed
+        4:  100:        }
+call    0 returned 4
+call    1 never executed
+        -:  101:    } 
+        -:  102:    else // Otherwise, just read one result
+        -:  103:    {
+        8:  104:        std::cout << readOne();
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+call    7 never executed
+        -:  105:    }
+        9:  106:}
+        -:  107:
+function main called 2 returned 100% blocks executed 54%
+        2:  108:int main(int argc, char* argv[])
+        -:  109:{
+        -:  110:    // Parse options: number of vertices, edges, and optional RNG seed
+        2:  111:    int V=-1, E=-1; unsigned seed = 42;
+        -:  112:    int opt;
+        6:  113:    while ((opt = getopt(argc, argv, "v:e:s:")) != -1) {
+call    0 returned 6
+branch  1 taken 4
+branch  2 taken 2 (fallthrough)
+        8:  114:        if (opt=='v') V = std::stoi(optarg);
+branch  0 taken 2 (fallthrough)
+branch  1 taken 2
+call    2 returned 2
+branch  3 taken 2 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 2
+branch  6 taken 2 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 2
+call    9 never executed
+        6:  115:        else if (opt=='e') E = std::stoi(optarg);
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+call    2 returned 2
+branch  3 taken 2 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 2
+branch  6 taken 2 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 2
+call    9 never executed
+    #####:  116:        else if (opt=='s') seed = std::stoul(optarg);
+branch  0 never executed (fallthrough)
+branch  1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+call    8 never executed
+call    9 never executed
+    #####:  117:        else { usage(argv[0]); return 1; }
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  118:    }
+       2*:  119:    if (V<=0 || E<0) { usage(argv[0]); return 1; }
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+branch  2 taken 0 (fallthrough)
+branch  3 taken 2
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+        -:  120:
+        -:  121:    // Create and connect TCP socket to the server
+        2:  122:    int sock = socket(AF_INET, SOCK_STREAM, 0);
+call    0 returned 2
+        2:  123:    sockaddr_in addr{}; addr.sin_family = AF_INET; addr.sin_port = htons(PORT);
+        2:  124:    inet_pton(AF_INET, SERVER_IP, &addr.sin_addr);
+call    0 returned 2
+        2:  125:    if (connect(sock, (sockaddr*)&addr, sizeof(addr)) < 0) {
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 2
+    #####:  126:        perror("connect"); return 1;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  127:    }
+        2:  128:    std::cout << "Connected to " << SERVER_IP << ":" << PORT << '\n';
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+branch  7 taken 2 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 2
+branch 10 taken 2 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 2
+branch 13 taken 2 (fallthrough)
+branch 14 taken 0 (throw)
+        -:  129:
+        -:  130:    // Loop: prompt for algorithm name and send request
+        2:  131:    std::string algo;
+call    0 returned 2
+        -:  132:    while (true) {
+       11:  133:        std::cout << "algo> ";
+call    0 returned 11
+branch  1 taken 11 (fallthrough)
+branch  2 taken 0 (throw)
+       11:  134:        if (!std::getline(std::cin, algo) || algo=="quit") break;
+call    0 returned 11
+branch  1 taken 11 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 11
+branch  4 taken 11 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 11 (fallthrough)
+branch  7 taken 0
+call    8 returned 11
+branch  9 taken 11 (fallthrough)
+branch 10 taken 0 (throw)
+branch 11 taken 2 (fallthrough)
+branch 12 taken 9
+branch 13 taken 2 (fallthrough)
+branch 14 taken 9
+       9*:  135:        if (algo.empty()) continue;
+call    0 returned 9
+branch  1 taken 0 (fallthrough)
+branch  2 taken 9
+        -:  136:
+        9:  137:        auto edges = buildEdges(V, E, seed); // Generate edges
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  138:        // Send request and handle errors
+        -:  139:        try 
+        -:  140:        { 
+        9:  141:            doRequest(sock, algo, V, E, edges); 
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  142:        }
+    =====:  143:        catch (...) { 
+call    0 never executed
+    =====:  144:            std::cerr << "connection lost\n"; break; 
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    =====:  145:        }
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+       18:  146:    }
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0
+call    3 never executed
+        -:  147:
+        2:  148:    close(sock);
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  149:}
+call    0 returned 2
+call    1 never executed

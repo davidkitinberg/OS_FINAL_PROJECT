@@ -1,0 +1,553 @@
+        -:    0:Source:Server.cpp
+        -:    1:#include <iostream>
+        -:    2:#include <sstream>
+        -:    3:#include <string>
+        -:    4:#include <vector>
+        -:    5:#include <cstring>
+        -:    6:#include <cctype>
+        -:    7:#include <netinet/in.h>
+        -:    8:#include <unistd.h>
+        -:    9:#include <fcntl.h>
+        -:   10:#include <sys/select.h>
+        -:   11:#include <algorithm>
+        -:   12:#include <cerrno>
+        -:   13:
+        -:   14:#include "Graph.h"
+        -:   15:#include "AlgorithmFactory.h"
+        -:   16:#include "GraphAlgorithm.h"
+        -:   17:
+        -:   18:constexpr int PORT = 12345;
+        -:   19:constexpr int BUFFER_SIZE = 1 << 16; // 64KB
+        -:   20:
+function _ZL14isDirectedAlgoRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 10 returned 100% blocks executed 90%
+       10:   21:static bool isDirectedAlgo(const std::string& algo) {
+        -:   22:    // SCC and MaxFlow should use directed edges; others default to undirected.
+       10:   23:    std::string a = algo;
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+       62:   24:    for (auto& c : a) c = std::tolower(static_cast<unsigned char>(c));
+call    0 returned 10
+call    1 returned 10
+call    2 returned 52
+call    3 returned 52
+call    4 returned 62
+branch  5 taken 52
+branch  6 taken 10 (fallthrough)
+       20:   25:    return (a == "scc" || a == "maxflow");
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 8 (fallthrough)
+branch  4 taken 2
+call    5 returned 8
+branch  6 taken 8 (fallthrough)
+branch  7 taken 0 (throw)
+branch  8 taken 2 (fallthrough)
+branch  9 taken 6
+       10:   26:}
+call    0 returned 10
+call    1 never executed
+        -:   27:
+function _ZL8writeAlliRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 12 returned 100% blocks executed 89%
+       12:   28:static void writeAll(int fd, const std::string& s) {
+       12:   29:    const char* p = s.c_str();
+call    0 returned 12
+       12:   30:    size_t left = s.size();
+call    0 returned 12
+       24:   31:    while (left > 0) {
+branch  0 taken 12
+branch  1 taken 12 (fallthrough)
+       12:   32:        ssize_t n = write(fd, p, left);
+call    0 returned 12
+      12*:   33:        if (n <= 0) break;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 12
+       12:   34:        p += n; left -= static_cast<size_t>(n);
+        -:   35:    }
+       12:   36:}
+        -:   37:
+        -:   38:// Keep the client connected; process multiple requests until "quit"
+function _Z12handleClienti called 2 returned 100% blocks executed 41%
+        2:   39:void handleClient(int clientSock) {
+        2:   40:    std::vector<char> buf(BUFFER_SIZE, 0);
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+        -:   41:
+        -:   42:    while (true) {
+       12:   43:        int bytesRead = recv(clientSock, buf.data(), buf.size() - 1, 0);
+call    0 returned 12
+call    1 returned 12
+call    2 returned 12
+branch  3 taken 12 (fallthrough)
+branch  4 taken 0 (throw)
+       12:   44:        if (bytesRead <= 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 12
+    #####:   45:            std::cerr << "Client disconnected or recv failed.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:   46:            break;
+        -:   47:        }
+       12:   48:        buf[bytesRead] = '\0';
+call    0 returned 12
+        -:   49:
+       12:   50:        std::istringstream input(std::string(buf.data(), bytesRead));
+call    0 returned 12
+call    1 returned 12
+branch  2 taken 12 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 12
+branch  5 taken 12 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 12
+call    8 never executed
+        -:   51:
+        -:   52:        // First token is algorithm name
+       12:   53:        std::string algoName;
+call    0 returned 12
+      12*:   54:        if (!(input >> algoName)) {
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 12
+branch  4 taken 12 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 0 (fallthrough)
+branch  7 taken 12
+    #####:   55:            writeAll(clientSock, "Bad request: expected <algo> <v> <e> ...\n");
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+    #####:   56:            continue; // stay connected and wait for the next request
+        -:   57:        }
+        -:   58:
+        -:   59:        // Quit command (case-insensitive)
+       12:   60:        std::string lower = algoName;
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+       72:   61:        for (auto& c : lower) c = std::tolower(static_cast<unsigned char>(c));
+call    0 returned 12
+call    1 returned 12
+call    2 returned 60
+call    3 returned 60
+call    4 returned 72
+branch  5 taken 60
+branch  6 taken 12 (fallthrough)
+       12:   62:        if (lower == "quit") {
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 2 (fallthrough)
+branch  4 taken 10
+        2:   63:            writeAll(clientSock, "bye\n");
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+call    7 never executed
+        2:   64:            break; // close the connection
+        -:   65:        }
+        -:   66:
+        -:   67:        int v, e;
+      10*:   68:        if (!(input >> v >> e)) {
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 10
+branch  4 taken 10 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 10
+branch  7 taken 10 (fallthrough)
+branch  8 taken 0 (throw)
+branch  9 taken 0 (fallthrough)
+branch 10 taken 10
+    #####:   69:            writeAll(clientSock, "Bad request: expected <algo> <v> <e>\n");
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+    #####:   70:            continue;
+        -:   71:        }
+      10*:   72:        if (v <= 0 || e < 0) {
+branch  0 taken 10 (fallthrough)
+branch  1 taken 0
+branch  2 taken 0 (fallthrough)
+branch  3 taken 10
+    #####:   73:            writeAll(clientSock, "Invalid graph parameters.\n");
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+    #####:   74:            continue;
+        -:   75:        }
+        -:   76:
+       10:   77:        Graph g(v);
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+       10:   78:        const bool directed = isDirectedAlgo(algoName);
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   79:
+       10:   80:        bool bad = false;
+       75:   81:        for (int i = 0; i < e; ++i) {
+branch  0 taken 65
+branch  1 taken 10 (fallthrough)
+        -:   82:            int u, w;
+       65:   83:            if (!(input >> u >> w)) {
+call    0 returned 65
+branch  1 taken 65 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 65
+branch  4 taken 65 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 65
+branch  7 taken 65 (fallthrough)
+branch  8 taken 0 (throw)
+branch  9 taken 0 (fallthrough)
+branch 10 taken 65
+    #####:   84:                writeAll(clientSock, "Bad request: not enough edges provided.\n");
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+    #####:   85:                bad = true; break;
+        -:   86:            }
+       65:   87:            if (u < 0 || u >= v || w < 0 || w >= v) {
+branch  0 taken 65 (fallthrough)
+branch  1 taken 0
+branch  2 taken 65 (fallthrough)
+branch  3 taken 0
+branch  4 taken 65 (fallthrough)
+branch  5 taken 0
+branch  6 taken 0 (fallthrough)
+branch  7 taken 65
+    #####:   88:                writeAll(clientSock, "Invalid edge.\n");
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+    #####:   89:                bad = true; break;
+        -:   90:            }
+       65:   91:            if (directed) g.addDirectedEdge(u, w);
+branch  0 taken 26 (fallthrough)
+branch  1 taken 39
+call    2 returned 26
+branch  3 taken 26 (fallthrough)
+branch  4 taken 0 (throw)
+       39:   92:            else g.addEdge(u, w);
+call    0 returned 39
+branch  1 taken 39 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   93:        }
+      10*:   94:        if (bad) continue;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 10
+        -:   95:
+        -:   96:        // Strategy via Factory
+       10:   97:        std::string response;
+call    0 returned 10
+        -:   98:        try {
+       10:   99:            auto algo = AlgorithmFactory::create(algoName);
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+       10:  100:            response = algo->run(g);
+call    0 returned 10
+call    1 returned 10
+branch  2 taken 10 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 10
+call    5 returned 10
+       10:  101:            response.push_back('\n');
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+       10:  102:        } catch (const std::exception& ex) {
+call    0 returned 10
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed
+call    4 never executed
+    =====:  103:            response = std::string("Error: ") + ex.what() + "\n";
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+call   10 never executed
+call   11 never executed
+call   12 never executed
+call   13 never executed
+call   14 never executed
+call   15 never executed
+    =====:  104:        }
+call    0 never executed
+call    1 never executed
+        -:  105:
+       10:  106:        writeAll(clientSock, response);
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  107:        // loop back and wait for the next request from the same client
+       26:  108:    }
+call    0 returned 10
+call    1 returned 10
+branch  2 taken 10 (fallthrough)
+branch  3 taken 0
+call    4 returned 12
+branch  5 taken 10
+branch  6 taken 2
+branch  7 taken 0
+call    8 returned 12
+branch  9 taken 10
+branch 10 taken 0
+branch 11 taken 2
+call   12 returned 12
+branch 13 taken 10
+branch 14 taken 2
+branch 15 taken 0
+call   16 never executed
+call   17 never executed
+call   18 never executed
+call   19 never executed
+call   20 never executed
+        -:  109:
+        2:  110:    close(clientSock);
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  111:    std::cout << "Client served and disconnected.\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  112:}
+call    0 returned 2
+call    1 never executed
+        -:  113:
+function main called 1 returned 100% blocks executed 70%
+        1:  114:int main() {
+        -:  115:    // Create a TCP socket
+        1:  116:    int serverSock = socket(AF_INET, SOCK_STREAM, 0);
+call    0 returned 1
+        1:  117:    if (serverSock < 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  118:        std::cerr << "Failed to create socket.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  119:        return 1;
+        -:  120:    }
+        -:  121:
+        -:  122:    // Reuse address for quick restarts
+        1:  123:    int yes = 1;
+        1:  124:    setsockopt(serverSock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+call    0 returned 1
+        -:  125:
+        -:  126:    // Setup server address struct
+        1:  127:    sockaddr_in serverAddr{};
+        1:  128:    serverAddr.sin_family = AF_INET;
+        1:  129:    serverAddr.sin_port   = htons(PORT);
+        1:  130:    serverAddr.sin_addr.s_addr = INADDR_ANY;
+        -:  131:
+        -:  132:    // Bind the socket to the address and port
+        1:  133:    if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    #####:  134:        std::cerr << "Bind failed.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  135:        return 1;
+        -:  136:    }
+        -:  137:
+        -:  138:    // Start listening for incoming connections
+        1:  139:    if (listen(serverSock, 16) < 0) {
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    #####:  140:        std::cerr << "Listen failed.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  141:        return 1;
+        -:  142:    }
+        -:  143:
+        1:  144:    std::cout << "Server is running on port " << PORT << "\n";
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 1
+branch  7 taken 1 (fallthrough)
+branch  8 taken 0 (throw)
+        -:  145:
+        -:  146:
+        -:  147:    // make STDIN non-blocking so select() works cleanly
+        1:  148:    int stdinFlags = fcntl(STDIN_FILENO, F_GETFL, 0);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+       2*:  149:    if (stdinFlags == -1 ||
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1
+        1:  150:        fcntl(STDIN_FILENO, F_SETFL, stdinFlags | O_NONBLOCK) == -1) {
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 1
+    #####:  151:        std::cerr << "Failed to set STDIN non-blocking.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  152:        close(serverSock);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  153:        return 1;
+        -:  154:    }
+        -:  155:
+        -:  156:
+        -:  157:    // Keep accepting clients in an infinite loop
+        1:  158:    bool running = true;
+        4:  159:    while (running) {
+branch  0 taken 3
+branch  1 taken 1 (fallthrough)
+        -:  160:
+        -:  161:        fd_set readfds;
+       51:  162:        FD_ZERO(&readfds);
+branch  0 taken 48
+branch  1 taken 3 (fallthrough)
+        3:  163:        FD_SET(serverSock, &readfds);   // watch the listening socket
+        3:  164:        FD_SET(STDIN_FILENO, &readfds); // watch STDIN for “quit”
+        -:  165:
+        -:  166:
+        3:  167:        int maxFd = std::max(serverSock, STDIN_FILENO) + 1;
+call    0 returned 3
+        3:  168:        int ready  = select(maxFd, &readfds, nullptr, nullptr, nullptr);
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+       3*:  169:        if (ready < 0 && errno != EINTR) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 3
+branch  2 never executed (fallthrough)
+branch  3 never executed
+    #####:  170:            std::cerr << "select() failed.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  171:            break;
+        -:  172:        }
+        -:  173:
+        -:  174:        // Check if user typed something on STDIN
+        3:  175:        if (FD_ISSET(STDIN_FILENO, &readfds)) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 2
+        1:  176:            std::string cmd;
+call    0 returned 1
+        1:  177:            std::getline(std::cin, cmd); // safe: select() said data is ready
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  178:            if (cmd == "quit") {
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 1 (fallthrough)
+branch  4 taken 0
+        1:  179:                std::cout << "[Server] Shutdown requested\n";
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  180:                running = false; // leave loop after any active client
+        -:  181:            }
+        1:  182:        }
+call    0 returned 1
+call    1 never executed
+        -:  183:
+        -:  184:        // Wait for a client to connect
+        3:  185:        if (running && FD_ISSET(serverSock, &readfds)) {
+branch  0 taken 2 (fallthrough)
+branch  1 taken 1
+branch  2 taken 2 (fallthrough)
+branch  3 taken 0
+        2:  186:            sockaddr_in clientAddr{};
+        2:  187:            socklen_t   clientLen = sizeof(clientAddr);
+        2:  188:            int clientSock = accept(serverSock,
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  189:                                    (struct sockaddr*)&clientAddr,
+        -:  190:                                    &clientLen);
+       2*:  191:            if (clientSock < 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  192:                std::cerr << "Accept failed.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  193:                continue;
+        -:  194:            }
+        2:  195:            std::cout << "Client connected.\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  196:
+        -:  197:            // Handle this client (sequentially, not multi-threaded)
+        2:  198:            handleClient(clientSock);
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  199:        }
+        -:  200:
+        -:  201:    }
+        -:  202:
+        1:  203:    close(serverSock);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  204:    return 0;
+        -:  205:}

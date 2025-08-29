@@ -1,0 +1,169 @@
+        -:    0:Source:EulerServer.cpp
+        -:    1:#include <iostream>
+        -:    2:#include <sstream>
+        -:    3:#include <string>
+        -:    4:#include <vector>
+        -:    5:#include <cstring>
+        -:    6:#include <netinet/in.h>
+        -:    7:#include <unistd.h>
+        -:    8:#include <fcntl.h>        // NEW: non-blocking I/O
+        -:    9:#include <sys/select.h>   // NEW: select()
+        -:   10:#include <algorithm>      // NEW: std::max
+        -:   11:#include <cerrno>         // NEW: errno
+        -:   12:
+        -:   13:#include "Graph.h"
+        -:   14:#include "EulerChecker.h"
+        -:   15:
+        -:   16:constexpr int PORT = 12345;
+        -:   17:constexpr int BUFFER_SIZE = 4096;
+        -:   18:
+        -:   19:// Handle a single client request
+        3:   20:void handleClient(int clientSock) {
+        -:   21:    char buffer[BUFFER_SIZE];
+        3:   22:    memset(buffer, 0, sizeof(buffer));
+        -:   23:
+        -:   24:    // Read data sent from the client
+        3:   25:    int bytesRead = read(clientSock, buffer, sizeof(buffer) - 1);
+        3:   26:    if (bytesRead <= 0) {
+    #####:   27:        std::cerr << "Failed to read from client.\n";
+    #####:   28:        close(clientSock);
+    #####:   29:        return;
+        -:   30:    }
+        -:   31:
+        -:   32:    // Parse input as: number of vertices, number of edges, followed by edge list
+        3:   33:    std::istringstream input(buffer);
+        -:   34:    int v, e;
+        3:   35:    input >> v >> e;
+        -:   36:
+        -:   37:    // Check on graph parameters
+        3:   38:    if (v <= 0 || e < 0) {
+    #####:   39:        std::string msg = "Invalid graph parameters.\n";
+    #####:   40:        write(clientSock, msg.c_str(), msg.size());
+    #####:   41:        close(clientSock);
+    #####:   42:        return;
+    #####:   43:    }
+        -:   44:
+        -:   45:    // Build the graph
+        3:   46:    Graph g(v);
+       28:   47:    for (int i = 0; i < e; ++i) {
+        -:   48:        int u, w;
+       25:   49:        input >> u >> w;
+        -:   50:        // Make sure edge endpoints are within valid range
+       25:   51:        if (u < 0 || u >= v || w < 0 || w >= v) {
+    #####:   52:            std::string msg = "Invalid edge.\n";
+    #####:   53:            write(clientSock, msg.c_str(), msg.size());
+    #####:   54:            close(clientSock);
+    #####:   55:            return;
+    #####:   56:        }
+       25:   57:        g.addEdge(u, w);
+        -:   58:    }
+        -:   59:
+        -:   60:    // Analyze the graph
+        3:   61:    std::ostringstream response;
+        3:   62:    int result = isEulerian(g);
+        3:   63:    if (result == 2) {
+        1:   64:        response << "Eulerian Circuit\n";
+        2:   65:    } else if (result == 1) {
+        1:   66:        response << "Eulerian Path\n";
+        -:   67:    } else {
+        1:   68:        response << "Not Eulerian\n";
+        -:   69:    }
+        -:   70:
+        -:   71:    // Send back the response
+        3:   72:    std::string respStr = response.str();
+        3:   73:    write(clientSock, respStr.c_str(), respStr.size());
+        -:   74:
+        3:   75:    close(clientSock);
+        3:   76:    std::cout << "Client served and disconnected.\n";
+        3:   77:}
+        -:   78:
+        -:   79:
+        -:   80:
+        1:   81:int main() {
+        -:   82:    // Create a TCP socket
+        1:   83:    int serverSock = socket(AF_INET, SOCK_STREAM, 0);
+        1:   84:    if (serverSock < 0) {
+    #####:   85:        std::cerr << "Failed to create socket.\n";
+    #####:   86:        return 1;
+        -:   87:    }
+        -:   88:
+        -:   89:    // Define server address info
+        1:   90:    sockaddr_in serverAddr{};
+        1:   91:    serverAddr.sin_family = AF_INET; // IPv4
+        1:   92:    serverAddr.sin_port = htons(PORT); // convert port to network byte order
+        1:   93:    serverAddr.sin_addr.s_addr = INADDR_ANY; // bind to all available interfaces
+        -:   94:
+        -:   95:    // Bind the socket to the given port
+        1:   96:    if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+    #####:   97:        std::cerr << "Bind failed.\n";
+    #####:   98:        return 1;
+        -:   99:    }
+        -:  100:
+        -:  101:    // Put the socket into listening mode
+        1:  102:    if (listen(serverSock, 5) < 0) {
+    #####:  103:        std::cerr << "Listen failed.\n";
+    #####:  104:        return 1;
+        -:  105:    }
+        -:  106:
+        1:  107:    std::cout << "Server is running on port " << PORT << "\n";
+        -:  108:
+        -:  109:
+        -:  110:    // NEW: make STDIN non-blocking so select() works cleanly
+        1:  111:    int stdinFlags = fcntl(STDIN_FILENO, F_GETFL, 0);
+       2*:  112:    if (stdinFlags == -1 ||
+        1:  113:        fcntl(STDIN_FILENO, F_SETFL, stdinFlags | O_NONBLOCK) == -1) {
+    #####:  114:        std::cerr << "Failed to set STDIN non-blocking.\n";
+    #####:  115:        close(serverSock);
+    #####:  116:        return 1;
+        -:  117:    }
+        -:  118:
+        -:  119:    // Keep accepting clients in an infinite loop
+        1:  120:    bool running = true;
+        5:  121:    while (running) {
+        -:  122:
+        -:  123:        fd_set readfds;
+       68:  124:        FD_ZERO(&readfds);
+        4:  125:        FD_SET(serverSock, &readfds);   // watch the listening socket
+        4:  126:        FD_SET(STDIN_FILENO, &readfds); // watch STDIN for “quit”
+        -:  127:
+        -:  128:
+        4:  129:        int maxFd = std::max(serverSock, STDIN_FILENO) + 1;
+        4:  130:        int ready  = select(maxFd, &readfds, nullptr, nullptr, nullptr);
+       4*:  131:        if (ready < 0 && errno != EINTR) {
+    #####:  132:            std::cerr << "select() failed.\n";
+    #####:  133:            break;
+        -:  134:        }
+        -:  135:
+        -:  136:        // Check if user typed something on STDIN
+        4:  137:        if (FD_ISSET(STDIN_FILENO, &readfds)) {
+        1:  138:            std::string cmd;
+        1:  139:            std::getline(std::cin, cmd);    // safe: select() said data is ready
+        1:  140:            if (cmd == "quit") {
+        1:  141:                std::cout << "[Server] Shutdown requested\n";
+        1:  142:                running = false;            // leave loop after any active client
+        -:  143:            }
+        1:  144:        }
+        -:  145:
+        -:  146:        // Wait for a client to connect
+        4:  147:        if (running && FD_ISSET(serverSock, &readfds)) {
+        3:  148:            sockaddr_in clientAddr{};
+        3:  149:            socklen_t   clientLen = sizeof(clientAddr);
+        3:  150:            int clientSock = accept(serverSock,
+        -:  151:                                    (struct sockaddr*)&clientAddr,
+        -:  152:                                    &clientLen);
+       3*:  153:            if (clientSock < 0) {
+    #####:  154:                std::cerr << "Accept failed.\n";
+    #####:  155:                continue;
+        -:  156:            }
+        3:  157:            std::cout << "Client connected.\n";
+        -:  158:
+        -:  159:            // Handle this client (sequentially, not multi-threaded)
+        3:  160:            handleClient(clientSock);
+        -:  161:        }
+        -:  162:
+        -:  163:    }
+        -:  164:
+        -:  165:    // Close the server socket
+        1:  166:    close(serverSock);
+        1:  167:    return 0;
+        -:  168:}

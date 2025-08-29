@@ -1,0 +1,286 @@
+File '/usr/include/c++/13/bits/unique_ptr.h'
+Lines executed:90.20% of 204
+Branches executed:58.33% of 24
+Taken at least once:29.17% of 24
+Calls executed:84.13% of 126
+Creating 'unique_ptr.h.gcov'
+
+File '/usr/include/c++/13/tuple'
+Lines executed:100.00% of 208
+No branches
+Calls executed:100.00% of 115
+Creating 'tuple.gcov'
+
+File '/usr/include/c++/13/bits/move.h'
+Lines executed:61.11% of 72
+No branches
+No calls
+Creating 'move.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_iterator.h'
+Lines executed:47.37% of 152
+No branches
+Calls executed:48.39% of 31
+Creating 'stl_iterator.h.gcov'
+
+File '/usr/include/c++/13/bits/basic_string.h'
+Lines executed:27.14% of 70
+Branches executed:18.52% of 54
+Taken at least once:12.96% of 54
+Calls executed:15.25% of 59
+Creating 'basic_string.h.gcov'
+
+File '/usr/include/c++/13/bits/new_allocator.h'
+Lines executed:29.35% of 184
+Branches executed:21.21% of 66
+Taken at least once:10.61% of 66
+Calls executed:29.91% of 107
+Creating 'new_allocator.h.gcov'
+
+File '/usr/include/c++/13/bits/allocator.h'
+Lines executed:100.00% of 4
+No branches
+Calls executed:31.65% of 79
+Creating 'allocator.h.gcov'
+
+File '/usr/include/c++/13/bits/alloc_traits.h'
+Lines executed:100.00% of 9
+Branches executed:66.67% of 6
+Taken at least once:33.33% of 6
+Calls executed:36.49% of 74
+Creating 'alloc_traits.h.gcov'
+
+File '/usr/include/c++/13/ext/alloc_traits.h'
+Lines executed:100.00% of 1
+No branches
+No calls
+Creating 'alloc_traits.h.gcov'
+
+File '/usr/include/c++/13/bits/basic_string.tcc'
+Lines executed:22.22% of 108
+Branches executed:12.50% of 48
+Taken at least once:8.33% of 48
+Calls executed:11.11% of 72
+Creating 'basic_string.tcc.gcov'
+
+File '/usr/include/c++/13/bits/stl_iterator_base_types.h'
+Lines executed:100.00% of 1
+No branches
+No calls
+Creating 'stl_iterator_base_types.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_iterator_base_funcs.h'
+Lines executed:100.00% of 3
+No branches
+No calls
+Creating 'stl_iterator_base_funcs.h.gcov'
+
+File '/usr/include/c++/13/bits/char_traits.h'
+Lines executed:10.45% of 134
+Branches executed:12.00% of 50
+Taken at least once:6.00% of 50
+Calls executed:7.41% of 27
+Creating 'char_traits.h.gcov'
+
+File 'HamiltonianAlgorithm.h'
+Lines executed:0.00% of 1
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+Calls executed:0.00% of 1
+Creating 'HamiltonianAlgorithm.h.gcov'
+
+File 'MaxFlowAlgorithm.h'
+Lines executed:0.00% of 1
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+Calls executed:0.00% of 1
+Creating 'MaxFlowAlgorithm.h.gcov'
+
+File 'SCCAlgorithm.h'
+Lines executed:0.00% of 1
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+Calls executed:0.00% of 1
+Creating 'SCCAlgorithm.h.gcov'
+
+File 'MSTAlgorithm.h'
+Lines executed:0.00% of 1
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+Calls executed:0.00% of 1
+Creating 'MSTAlgorithm.h.gcov'
+
+File 'EulerAlgorithm.h'
+Lines executed:0.00% of 1
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+Calls executed:0.00% of 1
+Creating 'EulerAlgorithm.h.gcov'
+
+File 'GraphAlgorithm.h'
+Lines executed:18.18% of 11
+No branches
+Calls executed:0.00% of 10
+Creating 'GraphAlgorithm.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_algo.h'
+Lines executed:100.00% of 4
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+Calls executed:100.00% of 6
+Creating 'stl_algo.h.gcov'
+
+File 'AlgorithmFactory.cpp'
+Lines executed:90.00% of 10
+Branches executed:88.89% of 36
+Taken at least once:55.56% of 36
+Calls executed:76.47% of 34
+Creating 'AlgorithmFactory.cpp.gcov'
+
+File '/usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h'
+Lines executed:25.00% of 16
+No branches
+No calls
+Creating 'c++config.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_algobase.h'
+Lines executed:35.28% of 428
+Branches executed:24.44% of 90
+Taken at least once:16.67% of 90
+Calls executed:30.16% of 126
+Creating 'stl_algobase.h.gcov'
+
+File '/usr/include/c++/13/bits/cpp_type_traits.h'
+Lines executed:50.00% of 12
+No branches
+No calls
+Creating 'cpp_type_traits.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_uninitialized.h'
+Lines executed:63.92% of 194
+Branches executed:58.33% of 24
+Taken at least once:50.00% of 24
+Calls executed:52.70% of 74
+Creating 'stl_uninitialized.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_vector.h'
+Lines executed:43.02% of 939
+Branches executed:38.55% of 166
+Taken at least once:21.08% of 166
+Calls executed:36.34% of 410
+Creating 'stl_vector.h.gcov'
+
+File '/usr/include/c++/13/bits/deque.tcc'
+Lines executed:3.43% of 175
+Branches executed:6.25% of 32
+Taken at least once:3.12% of 32
+Calls executed:4.84% of 62
+Creating 'deque.tcc.gcov'
+
+File '/usr/include/c++/13/bits/stl_deque.h'
+Lines executed:60.45% of 531
+Branches executed:61.29% of 62
+Taken at least once:37.10% of 62
+Calls executed:49.43% of 174
+Creating 'stl_deque.h.gcov'
+
+File '/usr/include/c++/13/bits/stl_construct.h'
+Lines executed:42.50% of 120
+Branches executed:44.44% of 18
+Taken at least once:33.33% of 18
+Calls executed:41.86% of 43
+Creating 'stl_construct.h.gcov'
+
+File '/usr/include/c++/13/bits/vector.tcc'
+Lines executed:65.87% of 126
+Branches executed:100.00% of 6
+Taken at least once:66.67% of 6
+Calls executed:59.09% of 66
+Creating 'vector.tcc.gcov'
+
+File '/usr/include/c++/13/bits/stl_queue.h'
+Lines executed:100.00% of 31
+No branches
+Calls executed:100.00% of 11
+Creating 'stl_queue.h.gcov'
+
+File 'EulerAlgorithm.cpp'
+Lines executed:81.58% of 38
+Branches executed:75.68% of 74
+Taken at least once:47.30% of 74
+Calls executed:69.64% of 56
+Creating 'EulerAlgorithm.cpp.gcov'
+
+File '/usr/include/c++/13/new'
+Lines executed:23.53% of 17
+No branches
+No calls
+Creating 'new.gcov'
+
+File 'Graph.cpp'
+Lines executed:64.71% of 34
+Branches executed:55.56% of 18
+Taken at least once:27.78% of 18
+Calls executed:33.33% of 36
+Creating 'Graph.cpp.gcov'
+
+File 'HamiltonianAlgorithm.cpp'
+Lines executed:93.02% of 43
+Branches executed:86.11% of 72
+Taken at least once:55.56% of 72
+Calls executed:81.97% of 61
+Creating 'HamiltonianAlgorithm.cpp.gcov'
+
+File '/usr/include/c++/13/bits/stl_stack.h'
+Lines executed:100.00% of 11
+No branches
+Calls executed:100.00% of 5
+Creating 'stl_stack.h.gcov'
+
+File 'MSTAlgorithm.cpp'
+Lines executed:87.50% of 32
+Branches executed:84.00% of 50
+Taken at least once:50.00% of 50
+Calls executed:80.00% of 35
+Creating 'MSTAlgorithm.cpp.gcov'
+
+File '/usr/include/c++/13/bits/stl_pair.h'
+Lines executed:100.00% of 9
+No branches
+Calls executed:100.00% of 4
+Creating 'stl_pair.h.gcov'
+
+File 'MaxFlowAlgorithm.cpp'
+Lines executed:96.00% of 50
+Branches executed:89.74% of 78
+Taken at least once:57.69% of 78
+Calls executed:85.94% of 64
+Creating 'MaxFlowAlgorithm.cpp.gcov'
+
+File '/usr/include/c++/13/limits'
+Lines executed:100.00% of 1
+No branches
+No calls
+Creating 'limits.gcov'
+
+File 'SCCAlgorithm.cpp'
+Lines executed:95.56% of 45
+Branches executed:94.87% of 78
+Taken at least once:64.10% of 78
+Calls executed:89.74% of 78
+Creating 'SCCAlgorithm.cpp.gcov'
+
+File 'Server.cpp'
+Lines executed:76.11% of 113
+Branches executed:77.99% of 209
+Taken at least once:45.45% of 209
+Calls executed:61.19% of 134
+Creating 'Server.cpp.gcov'
+
+File 'Graph.h'
+No executable lines
+No branches
+No calls
+Removing 'Graph.h.gcov'
+
+Lines executed:52.01% of 4145

@@ -6,6 +6,10 @@
 #include <cctype>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/select.h>
+#include <algorithm>
+#include <cerrno>
 
 #include "Graph.h"
 #include "AlgorithmFactory.h"
@@ -25,7 +29,7 @@ static void writeAll(int fd, const std::string& s) {
     const char* p = s.c_str();
     size_t left = s.size();
     while (left > 0) {
-        ssize_t n = ::write(fd, p, left);
+        ssize_t n = write(fd, p, left);
         if (n <= 0) break;
         p += n; left -= static_cast<size_t>(n);
     }
@@ -36,7 +40,7 @@ void handleClient(int clientSock) {
     std::vector<char> buf(BUFFER_SIZE, 0);
 
     while (true) {
-        int bytesRead = ::recv(clientSock, buf.data(), buf.size() - 1, 0);
+        int bytesRead = recv(clientSock, buf.data(), buf.size() - 1, 0);
         if (bytesRead <= 0) {
             std::cerr << "Client disconnected or recv failed.\n";
             break;
@@ -103,12 +107,13 @@ void handleClient(int clientSock) {
         // loop back and wait for the next request from the same client
     }
 
-    ::close(clientSock);
+    close(clientSock);
     std::cout << "Client served and disconnected.\n";
 }
 
 int main() {
-    int serverSock = ::socket(AF_INET, SOCK_STREAM, 0);
+    // Create a TCP socket
+    int serverSock = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSock < 0) {
         std::cerr << "Failed to create socket.\n";
         return 1;
@@ -118,35 +123,83 @@ int main() {
     int yes = 1;
     setsockopt(serverSock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
+    // Setup server address struct
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port   = htons(PORT);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-    if (::bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+    // Bind the socket to the address and port
+    if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         std::cerr << "Bind failed.\n";
         return 1;
     }
 
-    if (::listen(serverSock, 16) < 0) {
+    // Start listening for incoming connections
+    if (listen(serverSock, 16) < 0) {
         std::cerr << "Listen failed.\n";
         return 1;
     }
 
     std::cout << "Server is running on port " << PORT << "\n";
 
-    while (true) {
-        sockaddr_in clientAddr{};
-        socklen_t clientLen = sizeof(clientAddr);
-        int clientSock = ::accept(serverSock, (struct sockaddr*)&clientAddr, &clientLen);
-        if (clientSock < 0) {
-            std::cerr << "Accept failed.\n";
-            continue;
-        }
-        std::cout << "Client connected.\n";
-        handleClient(clientSock);
+
+    // make STDIN non-blocking so select() works cleanly
+    int stdinFlags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (stdinFlags == -1 ||
+        fcntl(STDIN_FILENO, F_SETFL, stdinFlags | O_NONBLOCK) == -1) {
+        std::cerr << "Failed to set STDIN non-blocking.\n";
+        close(serverSock);
+        return 1;
     }
 
-    ::close(serverSock);
+
+    // Keep accepting clients in an infinite loop
+    bool running = true;
+    while (running) {
+
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(serverSock, &readfds);   // watch the listening socket
+        FD_SET(STDIN_FILENO, &readfds); // watch STDIN for “quit”
+
+
+        int maxFd = std::max(serverSock, STDIN_FILENO) + 1;
+        int ready  = select(maxFd, &readfds, nullptr, nullptr, nullptr);
+        if (ready < 0 && errno != EINTR) {
+            std::cerr << "select() failed.\n";
+            break;
+        }
+
+        // Check if user typed something on STDIN
+        if (FD_ISSET(STDIN_FILENO, &readfds)) {
+            std::string cmd;
+            std::getline(std::cin, cmd); // safe: select() said data is ready
+            if (cmd == "quit") {
+                std::cout << "[Server] Shutdown requested\n";
+                running = false; // leave loop after any active client
+            }
+        }
+
+        // Wait for a client to connect
+        if (running && FD_ISSET(serverSock, &readfds)) {
+            sockaddr_in clientAddr{};
+            socklen_t   clientLen = sizeof(clientAddr);
+            int clientSock = accept(serverSock,
+                                    (struct sockaddr*)&clientAddr,
+                                    &clientLen);
+            if (clientSock < 0) {
+                std::cerr << "Accept failed.\n";
+                continue;
+            }
+            std::cout << "Client connected.\n";
+
+            // Handle this client (sequentially, not multi-threaded)
+            handleClient(clientSock);
+        }
+
+    }
+
+    close(serverSock);
     return 0;
 }

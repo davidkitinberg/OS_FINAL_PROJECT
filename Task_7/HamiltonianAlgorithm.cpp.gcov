@@ -1,0 +1,223 @@
+        -:    0:Source:HamiltonianAlgorithm.cpp
+        -:    1:#include "HamiltonianAlgorithm.h"
+        -:    2:#include "Graph.h"
+        -:    3:#include <vector>
+        -:    4:#include <sstream>
+        -:    5:
+        -:    6:// Build an adjacency matrix so we can check if an edge exists in O(1).
+function _ZL14buildAdjMatrixRK5Graph called 2 returned 100% blocks executed 74%
+        2:    7:static std::vector<std::vector<char>> buildAdjMatrix(const Graph& g) {
+        2:    8:    int n = g.V();
+call    0 returned 2
+        2:    9:    const std::vector<int>* adj = g.raw();
+call    0 returned 2
+        2:   10:    std::vector<std::vector<char>> A(n, std::vector<char>(n, 0));
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+call    7 returned 2
+call    8 returned 2
+call    9 never executed
+       12:   11:    for (int u = 0; u < n; ++u) {
+branch  0 taken 10
+branch  1 taken 2 (fallthrough)
+       36:   12:        for (int v : adj[u]) A[u][v] = 1;
+call    0 returned 10
+call    1 returned 10
+call    2 returned 26
+call    3 returned 26
+call    4 returned 26
+call    5 returned 26
+call    6 returned 36
+branch  7 taken 26
+branch  8 taken 10 (fallthrough)
+        -:   13:    }
+        2:   14:    return A;
+        -:   15:}
+        -:   16:
+        -:   17:// Backtracking helper: try to place vertex at position `pos` in path.
+        -:   18:// path[0] is fixed to 0 to avoid counting rotations of the same cycle.
+        -:   19:// `used[v]` marks if v is already in the path.
+        -:   20:// If we manage to place all vertices and there’s an edge back to the start,
+        -:   21:// we’ve found a Hamiltonian cycle.
+function _ZL17backtrackHamiltonRKSt6vectorIS_IcSaIcEESaIS1_EERS_IiSaIiEERS1_i called 5 returned 100% blocks executed 89%
+        5:   22:static bool backtrackHamilton(
+        -:   23:    const std::vector<std::vector<char>>& A,
+        -:   24:    std::vector<int>& path,
+        -:   25:    std::vector<char>& used,
+        -:   26:    int pos
+        -:   27:) {
+        5:   28:    const int n = (int)A.size();
+call    0 returned 5
+        5:   29:    if (pos == n) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 4
+        -:   30:        // All vertices are placed, now check if the last one connects back to 0.
+        1:   31:        return A[path[n - 1]][path[0]] != 0;
+call    0 returned 1
+call    1 returned 1
+call    2 returned 1
+call    3 returned 1
+        -:   32:    }
+        -:   33:
+        -:   34:    // Try every possible next vertex
+       10:   35:    for (int v = 1; v < n; ++v) // skip 0 since it's already fixed at start
+branch  0 taken 10
+branch  1 taken 0 (fallthrough)
+        -:   36:    {
+       10:   37:        if (!used[v] && A[path[pos - 1]][v]) {
+call    0 returned 10
+branch  1 taken 4 (fallthrough)
+branch  2 taken 6
+call    3 returned 4
+call    4 returned 4
+call    5 returned 4
+branch  6 taken 4 (fallthrough)
+branch  7 taken 0
+branch  8 taken 4 (fallthrough)
+branch  9 taken 6
+        4:   38:            used[v] = 1;
+call    0 returned 4
+        4:   39:            path[pos] = v;
+call    0 returned 4
+        4:   40:            if (backtrackHamilton(A, path, used, pos + 1)) return true;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+    #####:   41:            used[v] = 0; // undo choice if it didn’t work
+call    0 never executed
+        -:   42:        }
+        -:   43:    }
+    #####:   44:    return false;
+        -:   45:}
+        -:   46:
+function _ZN20HamiltonianAlgorithm3runB5cxx11ERK5Graph called 2 returned 100% blocks executed 66%
+        2:   47:std::string HamiltonianAlgorithm::run(const Graph& g) {
+        2:   48:    std::ostringstream out;
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:   49:    const int n = g.V();
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   50:
+       2*:   51:    if (n == 0) { out << "No Hamiltonian circuit (empty graph)"; return out.str(); }
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+       2*:   52:    if (n == 1) { out << "Hamiltonian circuit: 0 -> 0"; return out.str(); }
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+        -:   53:
+        2:   54:    auto A = buildAdjMatrix(g);
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   55:
+        -:   56:    // For an undirected Hamiltonian cycle, every vertex should have degree >= 2 (this isn’t a complete test).
+        -:   57:    {
+        2:   58:        const std::vector<int>* adj = g.raw();
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:   59:        bool obviouslyNo = false;
+        7:   60:        for (int u = 0; u < n; ++u) 
+branch  0 taken 6
+branch  1 taken 1 (fallthrough)
+        -:   61:        {
+        6:   62:            if ((int)adj[u].size() < 1) { obviouslyNo = true; break; }
+call    0 returned 6
+branch  1 taken 1 (fallthrough)
+branch  2 taken 5
+        -:   63:        }
+        2:   64:        if (obviouslyNo) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 1
+        1:   65:            out << "No Hamiltonian circuit";
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:   66:            return out.str();
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   67:        }
+        -:   68:    }
+        -:   69:
+        1:   70:    std::vector<int> path(n, -1);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1
+        1:   71:    std::vector<char> used(n, 0);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1
+        -:   72:
+        1:   73:    path[0] = 0; // Fix start to 0 (break rotational symmetry)
+call    0 returned 1
+        1:   74:    used[0] = 1;
+call    0 returned 1
+        -:   75:
+        1:   76:    if (backtrackHamilton(A, path, used, 1)) {
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 1 (fallthrough)
+branch  4 taken 0
+        1:   77:        out << "Hamiltonian circuit: ";
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        6:   78:        for (int i = 0; i < n; ++i) {
+branch  0 taken 5
+branch  1 taken 1 (fallthrough)
+        5:   79:            out << path[i] << " ";
+call    0 returned 5
+call    1 returned 5
+branch  2 taken 5 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 5
+branch  5 taken 5 (fallthrough)
+branch  6 taken 0 (throw)
+        -:   80:        }
+        1:   81:        out << "0"; // close the cycle by returning to the start
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   82:    } else {
+    #####:   83:        out << "No Hamiltonian circuit";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:   84:    }
+        1:   85:    return out.str();
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        2:   86:}
+call    0 returned 1
+call    1 returned 1
+call    2 returned 2
+call    3 returned 2
+call    4 never executed
+call    5 never executed
+call    6 never executed
+call    7 never executed

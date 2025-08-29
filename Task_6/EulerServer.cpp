@@ -5,6 +5,10 @@
 #include <cstring>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/select.h>
+#include <algorithm>
+#include <cerrno>
 
 #include "Graph.h"
 #include "EulerChecker.h"
@@ -102,20 +106,60 @@ int main() {
 
     std::cout << "Server is running on port " << PORT << "\n";
 
-    // Keep accepting clients in an infinite loop
-    while (true) {
-        sockaddr_in clientAddr{};
-        socklen_t clientLen = sizeof(clientAddr);
-        // Wait for a client to connect
-        int clientSock = accept(serverSock, (struct sockaddr*)&clientAddr, &clientLen);
-        if (clientSock < 0) {
-            std::cerr << "Accept failed.\n";
-            continue;
-        }
-        std::cout << "Client connected.\n";
 
-        // Handle this client (sequentially, not multi-threaded)
-        handleClient(clientSock);
+    // make STDIN non-blocking so select() works cleanly
+    int stdinFlags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (stdinFlags == -1 ||
+        fcntl(STDIN_FILENO, F_SETFL, stdinFlags | O_NONBLOCK) == -1) {
+        std::cerr << "Failed to set STDIN non-blocking.\n";
+        close(serverSock);
+        return 1;
+    }
+
+    // Keep accepting clients in an infinite loop
+    bool running = true;
+    while (running) {
+
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(serverSock, &readfds);   // watch the listening socket
+        FD_SET(STDIN_FILENO, &readfds); // watch STDIN for “quit”
+
+
+        int maxFd = std::max(serverSock, STDIN_FILENO) + 1;
+        int ready  = select(maxFd, &readfds, nullptr, nullptr, nullptr);
+        if (ready < 0 && errno != EINTR) {
+            std::cerr << "select() failed.\n";
+            break;
+        }
+
+        // Check if user typed something on STDIN
+        if (FD_ISSET(STDIN_FILENO, &readfds)) {
+            std::string cmd;
+            std::getline(std::cin, cmd); // safe: select() said data is ready
+            if (cmd == "quit") {
+                std::cout << "[Server] Shutdown requested\n";
+                running = false; // leave loop after any active client
+            }
+        }
+
+        // Wait for a client to connect
+        if (running && FD_ISSET(serverSock, &readfds)) {
+            sockaddr_in clientAddr{};
+            socklen_t clientLen = sizeof(clientAddr);
+            int clientSock = accept(serverSock,
+                                    (struct sockaddr*)&clientAddr,
+                                    &clientLen);
+            if (clientSock < 0) {
+                std::cerr << "Accept failed.\n";
+                continue;
+            }
+            std::cout << "Client connected.\n";
+
+            // Handle this client (sequentially, not multi-threaded)
+            handleClient(clientSock);
+        }
+
     }
 
     // Close the server socket

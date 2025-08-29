@@ -1,0 +1,85 @@
+        -:    0:Source:AlgorithmFactory.cpp
+        -:    1:#include <memory>
+        -:    2:#include "AlgorithmFactory.h"
+        -:    3:#include "MSTAlgorithm.h"
+        -:    4:#include "SCCAlgorithm.h"
+        -:    5:#include "MaxFlowAlgorithm.h"
+        -:    6:#include "HamiltonianAlgorithm.h"
+        -:    7:#include <algorithm>
+        -:    8:#include <stdexcept>
+        -:    9:
+function _ZN16AlgorithmFactory6createERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 12 returned 100% blocks executed 67%
+       12:   10:std::unique_ptr<GraphAlgorithm> AlgorithmFactory::create(const std::string& raw) {
+       12:   11:    std::string name = raw;
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+        -:   12:    
+        -:   13:    // normalize to lowercase
+function _ZZN16AlgorithmFactory6createERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEENKUlhE_clEh called 63 returned 100% blocks executed 100%
+       75:   14:    std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c){ return std::tolower(c); });
+call    0 returned 12
+call    1 returned 12
+call    2 returned 12
+call    3 returned 12
+        -:   15:
+       12:   16:    if (name == "mst")       return std::make_unique<MSTAlgorithm>();
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 3 (fallthrough)
+branch  4 taken 9
+call    5 returned 3
+branch  6 taken 3 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 3
+call    9 returned 3
+        9:   17:    if (name == "scc")       return std::make_unique<SCCAlgorithm>();
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 3 (fallthrough)
+branch  4 taken 6
+call    5 returned 3
+branch  6 taken 3 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 3
+call    9 returned 3
+        6:   18:    if (name == "maxflow")   return std::make_unique<MaxFlowAlgorithm>();
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 3 (fallthrough)
+branch  4 taken 3
+call    5 returned 3
+branch  6 taken 3 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 3
+call    9 returned 3
+        3:   19:    if (name == "hamilton")  return std::make_unique<HamiltonianAlgorithm>();
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 3 (fallthrough)
+branch  4 taken 0
+call    5 returned 3
+branch  6 taken 3 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 3
+call    9 returned 3
+        -:   20:
+    #####:   21:    throw std::invalid_argument("Unknown algorithm: " + raw);
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+call    7 never executed
+call    8 never executed
+call    9 never executed
+call   10 never executed
+       12:   22:}
+call    0 returned 12
+call    1 never executed

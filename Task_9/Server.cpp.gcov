@@ -1,0 +1,669 @@
+        -:    0:Source:Server.cpp
+        -:    1:#include <iostream>
+        -:    2:#include <thread>
+        -:    3:#include <vector>
+        -:    4:#include <queue>
+        -:    5:#include <mutex>
+        -:    6:#include <condition_variable>
+        -:    7:#include <atomic>
+        -:    8:#include <map>
+        -:    9:#include <string>
+        -:   10:#include <cstring>
+        -:   11:#include <netinet/in.h>
+        -:   12:#include <unistd.h>
+        -:   13:#include <cstdint>
+        -:   14:
+        -:   15:#include "Graph.h"
+        -:   16:#include "AlgorithmFactory.h"
+        -:   17:
+        -:   18:constexpr int   PORT = 12345;
+        -:   19:constexpr size_t BUF = 1 << 16;
+        -:   20:
+        -:   21:// Helper functions for I/O
+function _ZL7readAlliPvm called 182 returned 100% blocks executed 100%
+      182:   22:static bool readAll(int fd, void* buf, size_t n) {
+      182:   23:    auto* p = static_cast<uint8_t*>(buf);
+      362:   24:    while (n) {
+branch  0 taken 182
+branch  1 taken 180 (fallthrough)
+      182:   25:        ssize_t r = ::read(fd, p, n);
+call    0 returned 182
+      182:   26:        if (r <= 0) return false;
+branch  0 taken 2 (fallthrough)
+branch  1 taken 180
+      180:   27:        p += r; 
+      180:   28:        n -= r;
+        -:   29:    }
+      180:   30:    return true;
+        -:   31:}
+function _ZL8writeAlliPKvm called 32 returned 100% blocks executed 88%
+       32:   32:static bool writeAll(int fd, const void* buf, size_t n) {
+       32:   33:    const auto* p = static_cast<const uint8_t*>(buf);
+       64:   34:    while (n) {
+branch  0 taken 32
+branch  1 taken 32 (fallthrough)
+       32:   35:        ssize_t w = ::write(fd, p, n);
+call    0 returned 32
+      32*:   36:        if (w <= 0) return false;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 32
+       32:   37:        p += w; 
+       32:   38:        n -= w;
+        -:   39:    }
+       32:   40:    return true;
+        -:   41:}
+        -:   42:
+        -:   43:// Thread-safe queue data structure helper
+        -:   44:template<typename T>
+        -:   45:class ThreadQueue {
+        -:   46:    std::queue<T> q;
+        -:   47:    std::mutex m;
+        -:   48:    std::condition_variable cv;
+        -:   49:public:
+       37:   50:    void push(T v) {
+       37:   51:        { std::lock_guard<std::mutex> lk(m); q.push(std::move(v)); }
+       37:   52:        cv.notify_one();
+       37:   53:    }
+------------------
+_ZN11ThreadQueueI4TaskE4pushES0_:
+function _ZN11ThreadQueueI4TaskE4pushES0_ called 20 returned 100% blocks executed 78%
+       20:   50:    void push(T v) {
+       20:   51:        { std::lock_guard<std::mutex> lk(m); q.push(std::move(v)); }
+call    0 returned 20
+branch  1 taken 20 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 20
+call    4 returned 20
+branch  5 taken 20 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 20
+call    8 never executed
+       20:   52:        cv.notify_one();
+call    0 returned 20
+       20:   53:    }
+------------------
+_ZN11ThreadQueueISt4pairIiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEE4pushES7_:
+function _ZN11ThreadQueueISt4pairIiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEE4pushES7_ called 17 returned 100% blocks executed 78%
+       17:   50:    void push(T v) {
+       17:   51:        { std::lock_guard<std::mutex> lk(m); q.push(std::move(v)); }
+call    0 returned 17
+branch  1 taken 17 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 17
+call    4 returned 17
+branch  5 taken 17 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 17
+call    8 never executed
+       17:   52:        cv.notify_one();
+call    0 returned 17
+       17:   53:    }
+------------------
+       37:   54:    bool pop(T& out, const std::atomic<bool>& down) {
+       37:   55:        std::unique_lock<std::mutex> lk(m);
+      106:   56:        cv.wait(lk, [&]{ return !q.empty() || down; });
+      37*:   57:        if (q.empty()) return false;
+       37:   58:        out = std::move(q.front());
+       37:   59:        q.pop();
+       37:   60:        return true;
+       37:   61:    }
+------------------
+_ZN11ThreadQueueISt4pairIiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEE3popERS7_RKSt6atomicIbE:
+function _ZN11ThreadQueueISt4pairIiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEE3popERS7_RKSt6atomicIbE called 17 returned 100% blocks executed 81%
+       17:   54:    bool pop(T& out, const std::atomic<bool>& down) {
+       17:   55:        std::unique_lock<std::mutex> lk(m);
+call    0 returned 17
+branch  1 taken 17 (fallthrough)
+branch  2 taken 0 (throw)
+       17:   56:        cv.wait(lk, [&]{ return !q.empty() || down; });
+call    0 returned 17
+branch  1 taken 17 (fallthrough)
+branch  2 taken 0 (throw)
+      17*:   57:        if (q.empty()) return false;
+call    0 returned 17
+branch  1 taken 0 (fallthrough)
+branch  2 taken 17
+       17:   58:        out = std::move(q.front());
+call    0 returned 17
+call    1 returned 17
+call    2 returned 17
+       17:   59:        q.pop();
+call    0 returned 17
+       17:   60:        return true;
+       17:   61:    }
+call    0 returned 17
+call    1 never executed
+------------------
+_ZN11ThreadQueueI4TaskE3popERS0_RKSt6atomicIbE:
+function _ZN11ThreadQueueI4TaskE3popERS0_RKSt6atomicIbE called 20 returned 100% blocks executed 81%
+       20:   54:    bool pop(T& out, const std::atomic<bool>& down) {
+       20:   55:        std::unique_lock<std::mutex> lk(m);
+call    0 returned 20
+branch  1 taken 20 (fallthrough)
+branch  2 taken 0 (throw)
+       20:   56:        cv.wait(lk, [&]{ return !q.empty() || down; });
+call    0 returned 20
+branch  1 taken 20 (fallthrough)
+branch  2 taken 0 (throw)
+      20*:   57:        if (q.empty()) return false;
+call    0 returned 20
+branch  1 taken 0 (fallthrough)
+branch  2 taken 20
+       20:   58:        out = std::move(q.front());
+call    0 returned 20
+call    1 returned 20
+call    2 returned 20
+       20:   59:        q.pop();
+call    0 returned 20
+       20:   60:        return true;
+       20:   61:    }
+call    0 returned 20
+call    1 never executed
+------------------
+        -:   62:};
+        -:   63:
+        -:   64:// Task Struct represents a unit of work passed between pipeline stages
+        -:   65:struct Task {
+        -:   66:    int clientFd; // Client socket
+        -:   67:    std::string algorithm; // Algorithm name
+        -:   68:    Graph graph; // Graph to run algorithm on
+        -:   69:
+        -:   70:    // default sentinel → makes the type default-constructible
+function _ZN4TaskC2Ev called 8 returned 100% blocks executed 80%
+        8:   71:    Task() : clientFd(-1), algorithm(), graph(0) {}
+call    0 returned 8
+call    1 returned 8
+branch  2 taken 8 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 never executed
+function _ZN4TaskC2EiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERK5Graph called 16 returned 100% blocks executed 83%
+       16:   72:    Task(int fd, std::string alg, const Graph& g)
+       16:   73:        : clientFd(fd), algorithm(std::move(alg)), graph(g) {}
+call    0 returned 16
+call    1 returned 16
+call    2 returned 16
+branch  3 taken 16 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 never executed
+        -:   74:};
+        -:   75:
+        -:   76:std::atomic<bool> shuttingDown{false};
+        -:   77:
+        -:   78:// One queue for each algorithm worker
+        -:   79:ThreadQueue<Task> algoQ[4]; // 0 mst 1 scc 2 maxflow 3 hamilton
+        -:   80:ThreadQueue<std::pair<int,std::string>> resultQ; // Shared result queue (for response stage)
+        -:   81:
+        -:   82:////////////////// Worker Threads //////////////////
+        -:   83:
+        -:   84:// Algorithm computation stage
+function _Z15algorithmWorkeriRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 4 returned 75% blocks executed 66%
+        4:   85:void algorithmWorker(int idx, const std::string& name)
+        -:   86:{
+        4:   87:    Task t;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+       20:   88:    while (algoQ[idx].pop(t, shuttingDown)) 
+call    0 returned 20
+branch  1 taken 20 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 20
+branch  4 taken 0 (fallthrough)
+        -:   89:    {
+       20:   90:        if (t.clientFd == -1) break; // sentinel
+branch  0 taken 4 (fallthrough)
+branch  1 taken 16
+       16:   91:        auto alg = AlgorithmFactory::create(name);
+call    0 returned 16
+branch  1 taken 16 (fallthrough)
+branch  2 taken 0 (throw)
+       16:   92:        std::string res = alg->run(t.graph); // Run algorithm
+call    0 returned 16
+call    1 returned 16
+branch  2 taken 16 (fallthrough)
+branch  3 taken 0 (throw)
+       16:   93:        resultQ.push({t.clientFd, std::move(res)}); // Push result to responder
+call    0 returned 16
+call    1 returned 16
+call    2 returned 16
+branch  3 taken 16 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 16
+call    6 never executed
+       16:   94:    }
+call    0 returned 16
+call    1 returned 16
+call    2 never executed
+call    3 never executed
+        4:   95:}
+call    0 returned 3
+call    1 never executed
+        -:   96:
+        -:   97:// Sends responses back to client
+function _Z14responseWorkerv called 1 returned 100% blocks executed 79%
+        1:   98:void responseWorker()
+        -:   99:{
+        1:  100:    std::pair<int,std::string> job;
+call    0 returned 1
+       17:  101:    while (resultQ.pop(job, shuttingDown)) // Wait for result
+call    0 returned 17
+branch  1 taken 17 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 17
+branch  4 taken 0 (fallthrough)
+        -:  102:    {
+       17:  103:        if (job.first == -1) break; // sentinel
+branch  0 taken 1 (fallthrough)
+branch  1 taken 16
+       16:  104:        int32_t len = htonl(job.second.size());
+call    0 returned 16
+      32*:  105:        if (!writeAll(job.first, &len, 4) ||
+call    0 returned 16
+branch  1 taken 16 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 16 (fallthrough)
+branch  4 taken 0
+branch  5 taken 0 (fallthrough)
+branch  6 taken 16
+       16:  106:            !writeAll(job.first, job.second.data(), job.second.size()))
+call    0 returned 16
+call    1 returned 16
+call    2 returned 16
+branch  3 taken 16 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 taken 0 (fallthrough)
+branch  6 taken 16
+    #####:  107:            close(job.first); // Close socket on failure
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  108:    }
+        1:  109:}
+call    0 returned 1
+call    1 never executed
+        -:  110:
+        -:  111:// Initial Receiver Thread: First stage of pipeline: accepts and parses client requests
+function _Z17connectionHandleri called 2 returned 100% blocks executed 65%
+        2:  112:void connectionHandler(int cfd)
+        -:  113:{
+       12:  114:    while (!shuttingDown) {
+call    0 returned 12
+branch  1 taken 12
+branch  2 taken 0 (fallthrough)
+        -:  115:
+        -:  116:        // Read number of vertices and edges
+        -:  117:        int32_t v_net, e_net;
+       12:  118:        if (!readAll(cfd, &v_net, 4) || !readAll(cfd, &e_net, 4)) break;
+call    0 returned 12
+branch  1 taken 12 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 10 (fallthrough)
+branch  4 taken 2
+call    5 returned 10
+branch  6 taken 10 (fallthrough)
+branch  7 taken 0 (throw)
+branch  8 taken 0 (fallthrough)
+branch  9 taken 10
+branch 10 taken 2 (fallthrough)
+branch 11 taken 10
+       10:  119:        int V = ntohl(v_net), E = ntohl(e_net);
+        -:  120:
+        -:  121:        // Build graph from edge list
+       10:  122:        Graph g(V);
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+       80:  123:        for (int i = 0; i < E; ++i) {
+branch  0 taken 70
+branch  1 taken 10 (fallthrough)
+        -:  124:            int32_t u_net, v2_net;
+      70*:  125:            if (!readAll(cfd, &u_net, 4) || !readAll(cfd, &v2_net, 4)) { close(cfd); return; }
+call    0 returned 70
+branch  1 taken 70 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 70 (fallthrough)
+branch  4 taken 0
+call    5 returned 70
+branch  6 taken 70 (fallthrough)
+branch  7 taken 0 (throw)
+branch  8 taken 0 (fallthrough)
+branch  9 taken 70
+branch 10 taken 0 (fallthrough)
+branch 11 taken 70
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+       70:  126:            g.addEdge(ntohl(u_net), ntohl(v2_net));
+call    0 returned 70
+branch  1 taken 70 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  127:        }
+        -:  128:
+        -:  129:        // Read algorithm name (length-prefixed)
+        -:  130:        int32_t len_net; 
+      10*:  131:        if (!readAll(cfd, &len_net, 4)) break;
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 10
+       10:  132:        std::string algo(ntohl(len_net), '\0');
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+      10*:  133:        if (!readAll(cfd, algo.data(), algo.size())) break;
+call    0 returned 10
+call    1 returned 10
+call    2 returned 10
+branch  3 taken 10 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 taken 0 (fallthrough)
+branch  6 taken 10
+        -:  134:
+        -:  135:        // Handle "all" command: send same graph to all algorithm workers
+       10:  136:        if (algo == "all") 
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 2 (fallthrough)
+branch  4 taken 8
+        -:  137:        {
+       18:  138:            for (const auto& [i,n] : std::map<int,std::string>{{0,"mst"},{1,"scc"},{2,"maxflow"},{3,"hamilton"}})
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 8 (fallthrough)
+branch  5 taken 2
+call    6 returned 8
+call    7 returned 2
+call    8 returned 2
+call    9 returned 8
+call   10 returned 8
+call   11 returned 8
+call   12 returned 10
+branch 13 taken 8
+branch 14 taken 2 (fallthrough)
+branch 15 never executed (fallthrough)
+branch 16 never executed
+call   17 never executed
+       10:  139:                algoQ[i].push({cfd, n, g});
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+branch  7 taken 8 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 8
+call   10 returned 8
+call   11 returned 8
+call   12 returned 2
+call   13 never executed
+call   14 never executed
+call   15 never executed
+        -:  140:        } 
+        -:  141:        else // Map algorithm name to queue index
+        -:  142:        {
+       8*:  143:            int i = (algo=="mst")?0:(algo=="scc")?1:(algo=="maxflow")?2:(algo=="hamilton")?3:-1;
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 2 (fallthrough)
+branch  4 taken 6
+call    5 returned 6
+branch  6 taken 6 (fallthrough)
+branch  7 taken 0 (throw)
+branch  8 taken 2 (fallthrough)
+branch  9 taken 4
+call   10 returned 4
+branch 11 taken 4 (fallthrough)
+branch 12 taken 0 (throw)
+branch 13 taken 2 (fallthrough)
+branch 14 taken 2
+call   15 returned 2
+branch 16 taken 2 (fallthrough)
+branch 17 taken 0 (throw)
+branch 18 taken 2 (fallthrough)
+branch 19 taken 0
+        8:  144:            if (i >= 0) algoQ[i].push({cfd, algo, g});
+branch  0 taken 8 (fallthrough)
+branch  1 taken 0
+call    2 returned 8
+branch  3 taken 8 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 8
+branch  6 taken 8 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 8
+branch  9 taken 8 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 8
+call   12 returned 8
+call   13 never executed
+call   14 never executed
+        -:  145:        }
+       10:  146:    }
+call    0 returned 10
+branch  1 taken 10 (fallthrough)
+branch  2 taken 0
+call    3 returned 10
+branch  4 taken 10
+branch  5 taken 0
+branch  6 taken 0
+call    7 never executed
+call    8 never executed
+        2:  147:    close(cfd);
+call    0 returned 2
+        2:  148:}
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+branch  7 taken 2 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 2
+branch 10 taken 2 (fallthrough)
+branch 11 taken 0 (throw)
+branch 12 never executed (fallthrough)
+branch 13 never executed
+branch 14 never executed (fallthrough)
+branch 15 never executed
+call   16 never executed
+        -:  149:
+        -:  150:// ─────────────── stdin “quit” watcher ───────────────
+function _Z12stdinWatcheri called 1 returned 100% blocks executed 69%
+        1:  151:void stdinWatcher(int listenFd)
+        -:  152:{
+        1:  153:    std::string line;
+call    0 returned 1
+        2:  154:    while (std::getline(std::cin, line)) {
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 2
+branch  7 taken 0 (fallthrough)
+        2:  155:        if (line == "quit") {
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 1 (fallthrough)
+branch  4 taken 1
+        1:  156:            std::cout << "[Server] Shutdown requested\n";
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  157:            shuttingDown = true;
+call    0 returned 1
+        1:  158:            shutdown(listenFd, SHUT_RDWR);
+call    0 returned 1
+        1:  159:            close(listenFd);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  160:
+        5:  161:            for (auto& q : algoQ) q.push(Task{});       // poison pills
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+branch  7 taken 4
+branch  8 taken 1 (fallthrough)
+call    9 never executed
+        1:  162:            resultQ.push({-1,""});
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 1
+call    7 never executed
+        1:  163:            return;
+        -:  164:        }
+        -:  165:    }
+       1*:  166:}
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+        -:  167:
+        -:  168:
+function main called 1 returned 100% blocks executed 71%
+        1:  169:int main()
+        -:  170:{
+        -:  171:    // Create socket
+        1:  172:    int srv = socket(AF_INET, SOCK_STREAM, 0);
+call    0 returned 1
+       1*:  173:    if (srv < 0) { perror("socket"); return 1; }
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+        -:  174:
+        -:  175:    // Allow immediate reuse of the port after the server terminates
+        1:  176:    int opt = 1; 
+        1:  177:    setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+call    0 returned 1
+        -:  178:
+        -:  179:    // Setup server address struct
+        1:  180:    sockaddr_in addr{}; 
+        1:  181:    addr.sin_family = AF_INET;
+        1:  182:    addr.sin_port = htons(PORT); 
+        1:  183:    addr.sin_addr.s_addr = INADDR_ANY;
+        -:  184:
+        -:  185:    // Bind the socket to the address and port
+        1:  186:    if (bind(srv,(sockaddr*)&addr,sizeof(addr)) < 0) { 
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    #####:  187:        perror("bind"); return 1; 
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  188:    }
+        -:  189:
+        -:  190:    // Start listening for incoming connections
+       1*:  191:    if (listen(srv,10) < 0) { perror("listen"); return 1; }
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  192:
+        1:  193:    std::cout << "[Server] listening on " << PORT << '\n';
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 1
+branch  7 taken 1 (fallthrough)
+branch  8 taken 0 (throw)
+        -:  194:
+        -:  195:    // Start worker threads
+        1:  196:    std::vector<std::thread> th;
+call    0 returned 1
+        1:  197:    th.emplace_back(stdinWatcher, srv);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  198:    th.emplace_back(responseWorker);
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  199:    th.emplace_back(algorithmWorker,0,"mst");
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  200:    th.emplace_back(algorithmWorker,1,"scc");
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  201:    th.emplace_back(algorithmWorker,2,"maxflow");
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        1:  202:    th.emplace_back(algorithmWorker,3,"hamilton");
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  203:
+        -:  204:    // Accept client connections in loop
+        3:  205:    while (!shuttingDown) {
+call    0 returned 3
+branch  1 taken 3
+branch  2 taken 0 (fallthrough)
+        -:  206:        sockaddr_in cli; 
+        3:  207:        socklen_t cl = sizeof(cli);
+        3:  208:        int c = accept(srv,(sockaddr*)&cli,&cl);
+call    0 returned 3
+branch  1 taken 3 (fallthrough)
+branch  2 taken 0 (throw)
+       3*:  209:        if (c < 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 2
+        1:  210:            if (shuttingDown) break;
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+    #####:  211:            perror("accept"); continue;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+        -:  212:        }
+        2:  213:        th.emplace_back(connectionHandler,c); // Start receiver thread per client
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  214:    }
+        -:  215:
+        9:  216:    for (auto& t : th) t.join();
+call    0 returned 1
+call    1 returned 1
+call    2 returned 8
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+call    7 returned 9
+branch  8 taken 8
+branch  9 taken 1 (fallthrough)
+        1:  217:    return 0;
+        1:  218:}
+call    0 returned 1
+call    1 never executed
